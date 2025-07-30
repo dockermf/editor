@@ -7,8 +7,16 @@
 
 
 static bool can_move_cursor(CursorState* state, int dx, int dy)
-{
+{ //TODO: fix this shit
+	// out of screen bounds check
 	if (state->dx + dx <= 0 || state->dy + dy <= 0) {
+		return false;
+	}
+	// line's length exceeding check
+	else if (state->dx + dx > state->lengths[state->dy - 1]) {
+		fprintf(stderr, "state->dx = %d\ndx = %d\nstate->lengths[state->dy] = %ld\n", state->dx, dx, state->lengths[state->dy - 1]);
+		return false;
+	} else if (dy == 1 && state->lengths[state->dy - 1] == 0) {
 		return false;
 	} else {
 		return true;
@@ -35,43 +43,53 @@ void move_cursor(CursorState* state, int dx, int dy)
 static void arr_increase_capacity(CursorState* state)
 {
 	size_t new_capacity = state->capacity * 2;
-	fprintf(stderr, "next size: %ld\n", new_capacity * sizeof(size_t));
-	size_t* new_pointer = realloc(state->lengths, new_capacity * sizeof(size_t));
-	if (new_pointer == NULL) {
+	fprintf(stderr, "(memory: %ld -> %ld)\n", state->capacity * sizeof(*state->lengths), new_capacity * sizeof(*state->lengths));
+	size_t* new_pointer = realloc(state->lengths, new_capacity * sizeof(*new_pointer));
+	
+	if (!new_pointer) {
 		fprintf(stderr, "arr_increase_capacity() failed to reallocate memory\n");
 		exit(EXIT_FAILURE);
-	} else {
-		fprintf(stderr, "arr_increase_capacity() allocated %ld bytes of memory\n", new_capacity * sizeof(size_t));
-		memset(&state->lengths[state->capacity], 0, state->capacity * sizeof(size_t));
 	}
+	fprintf(stderr, "arr_increase_capacity() allocated %ld bytes of memory\n    Before memset: ", new_capacity * sizeof(*new_pointer));
+	
+	for (int i = 0; i < new_capacity; i++) {
+		fprintf(stderr, "[%ld]", new_pointer[i]);
+	}
+	// use new_pointer instead of state->lengths because it's freed by realloc() by now
+	memset(&new_pointer[state->capacity], 0, state->capacity * sizeof(*new_pointer));
+	fprintf(stderr, "\n    After memset: ");
+	
+	for (int i = 0; i < new_capacity; i++) {
+		fprintf(stderr, "[%ld]", new_pointer[i]);
+	}
+	
 	state->lengths = new_pointer;
 	state->capacity = new_capacity;
-	fprintf(stderr, "capacity: %ld, size: %ld, allocated: %ld\n", state->capacity, state->size, state->capacity * sizeof(size_t));
+	fprintf(stderr, "\n    Size: %ld\n    Capacity: %ld\n    Allocated: %ld bytes\n", state->size, state->capacity, state->capacity * sizeof(*state->lengths));
 }
 
 static void arr_push_char(CursorState* state)
 {
 	if (state->dy > state->capacity) {
-		fprintf(stderr, "tried writing on a new line, but we are out of memory (%ld bytes)\n", state->capacity * sizeof(size_t));
+		fprintf(stderr, "Calling arr_increase_capacity() ");
 		arr_increase_capacity(state);
-	} else {
-		int row = state->dy;
-		int col = state->dx;
-		state->size++;
-		state->lengths[row] += 1;
-		fprintf(stderr, "length: %ld\n", state->lengths[row]);
 	}
+	int row = state->dy;
+	int col = state->dx;
+	// array index starts at 0, but row at 1
+	state->lengths[row - 1] += 1;
+	// fprintf(stderr, "length is now: %ld\n", state->lengths[row - 1]);
 }
 
 void init_array(CursorState* state, size_t init_capacity)
 {
-	state->lengths = (size_t*) malloc(init_capacity * sizeof(size_t));
-	state->size = 0;
+	state->lengths = (size_t*) calloc(init_capacity, init_capacity * sizeof(*state->lengths));
+	state->size = 1;
 	state->capacity = init_capacity;
 	if (state->lengths == NULL) {
 		fprintf(stderr, "init_array() failed to allocate memory\n");
 	} else {
-		fprintf(stderr, "init_array() successfully allocated memory for %ld lines (%ld bytes while size_t* is %ld bytes)\n", init_capacity, sizeof(state->lengths), sizeof(size_t));
+		fprintf(stderr, "init_array() successfully allocated memory for %ld lines (%ld bytes while size_t* is %ld bytes)\n", init_capacity, sizeof(state->lengths), sizeof(*state->lengths));
 	}
 }
 
@@ -88,6 +106,7 @@ void do_backspace(CursorState* state)
 	if (!can_move_cursor(state, -1, 0)) return;
 	printf("\033[D \033[D");
 	state->dx--;
+	state->lengths[state->dy - 1]--;
 	display_cursor_position(state);
 }
 
@@ -96,6 +115,7 @@ void do_enter(CursorState* state)
 	printf("\033[E");
 	state->dx = 1;
 	state->dy++;
+	state->size++;
 	display_cursor_position(state);
 }
 

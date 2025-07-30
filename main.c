@@ -35,6 +35,7 @@ int main()
 		}
 	}
 	disable_raw_mode();
-	
+	free(state.lengths);
+	fprintf(stderr, "Freed array\n");
 	return 0;
 }
