@@ -9,7 +9,7 @@
 int main()
 {
 	size_t init_line_capacity = 1;
-	CursorState state = {
+	struct cursor_state state = {
 		.dx = 1,
 		.dy = 1,
 		.rows = 0,

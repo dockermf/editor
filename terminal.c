@@ -9,7 +9,7 @@
 struct termios config_in_use;
 struct termios raw;
 
-static void get_terminal_size(CursorState* state)
+static void get_terminal_size(struct cursor_state* state)
 { //or you could use ioctl instead of fucking with this
 	char inp[SIZE] = "";
 	int idx = 0;
@@ -41,7 +41,7 @@ static void get_terminal_size(CursorState* state)
 	}
 }
 
-void enable_raw_mode(CursorState* state)
+void enable_raw_mode(struct cursor_state* state)
 {
 	if (tcgetattr(STDIN_FILENO, &config_in_use) < 0) {
 		printf("Failed to save current terminal config\n");

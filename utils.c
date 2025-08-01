@@ -6,14 +6,11 @@
 #include "types.h"
 
 
-static bool can_move_cursor(CursorState* state, int dx, int dy)
+static bool can_move_cursor(struct cursor_state* state, int dx, int dy)
 { //TODO: fix this shit
-	// out of screen bounds check
 	if (state->dx + dx <= 0 || state->dy + dy <= 0) {
 		return false;
-	}
-	// line's length exceeding check
-	else if (state->dx + dx > state->lengths[state->dy - 1]) {
+	} else if (state->dx + dx > state->lengths[state->dy - 1]) {
 		fprintf(stderr, "state->dx = %d\ndx = %d\nstate->lengths[state->dy] = %ld\n", state->dx, dx, state->lengths[state->dy - 1]);
 		return false;
 	} else if (dy == 1 && state->lengths[state->dy - 1] == 0) {
@@ -23,7 +20,7 @@ static bool can_move_cursor(CursorState* state, int dx, int dy)
 	}
 }
 
-static void display_cursor_position(CursorState* state)
+static void display_cursor_position(struct cursor_state* state)
 {
 	int offset = 9;
 	printf("\033[%i;%iH", state->rows, state->columns - offset);
@@ -31,7 +28,7 @@ static void display_cursor_position(CursorState* state)
 	printf("\033[%i;%iH", state->dy, state->dx);
 }
 
-void move_cursor(CursorState* state, int dx, int dy)
+void move_cursor(struct cursor_state* state, int dx, int dy)
 {
 	if (!can_move_cursor(state, dx, dy)) return;
 	state->dx += dx;
@@ -40,7 +37,7 @@ void move_cursor(CursorState* state, int dx, int dy)
 	display_cursor_position(state);
 }
 
-static void arr_increase_capacity(CursorState* state)
+static void arr_increase_capacity(struct cursor_state* state)
 {
 	size_t new_capacity = state->capacity * 2;
 	fprintf(stderr, "(memory: %ld -> %ld)\n", state->capacity * sizeof(*state->lengths), new_capacity * sizeof(*state->lengths));
@@ -68,7 +65,7 @@ static void arr_increase_capacity(CursorState* state)
 	fprintf(stderr, "\n    Size: %ld\n    Capacity: %ld\n    Allocated: %ld bytes\n", state->size, state->capacity, state->capacity * sizeof(*state->lengths));
 }
 
-static void arr_push_char(CursorState* state)
+static void arr_push_char(struct cursor_state* state)
 {
 	if (state->dy > state->capacity) {
 		fprintf(stderr, "Calling arr_increase_capacity() ");
@@ -81,7 +78,7 @@ static void arr_push_char(CursorState* state)
 	// fprintf(stderr, "length is now: %ld\n", state->lengths[row - 1]);
 }
 
-void init_array(CursorState* state, size_t init_capacity)
+void init_array(struct cursor_state* state, size_t init_capacity)
 {
 	state->lengths = (size_t*) calloc(init_capacity, init_capacity * sizeof(*state->lengths));
 	state->size = 1;
@@ -93,7 +90,7 @@ void init_array(CursorState* state, size_t init_capacity)
 	}
 }
 
-void out(CursorState* state, const int inp)
+void out(struct cursor_state* state, const int inp)
 {
 	write(1, &inp, 1);
 	arr_push_char(state);
@@ -101,7 +98,7 @@ void out(CursorState* state, const int inp)
 	display_cursor_position(state);
 }
 
-void do_backspace(CursorState* state)
+void do_backspace(struct cursor_state* state)
 {
 	if (!can_move_cursor(state, -1, 0)) return;
 	printf("\033[D \033[D");
@@ -110,7 +107,7 @@ void do_backspace(CursorState* state)
 	display_cursor_position(state);
 }
 
-void do_enter(CursorState* state)
+void do_enter(struct cursor_state* state)
 {
 	printf("\033[E");
 	state->dx = 1;
@@ -126,13 +123,17 @@ int read_input()
 	ssize_t n = read(STDIN_FILENO, &seq, MAX_SEQ_LENGTH);
 	if (seq[0] == '\033' && n >= 3) {
 		if (seq[1] == '[') {
-			switch (seq[2])
-			{
-				case 'A': return ARROW_UP_KEY;
-				case 'B': return ARROW_DOWN_KEY;
-				case 'C': return ARROW_RIGHT_KEY;
-				case 'D': return ARROW_LEFT_KEY;
-				default: fprintf(stderr, "unknown fucker in control sequence (func read_input)\n");
+			switch (seq[2]) {
+			case 'A':
+				return ARROW_UP_KEY;
+			case 'B':
+				return ARROW_DOWN_KEY;
+			case 'C':
+				return ARROW_RIGHT_KEY;
+			case 'D':
+				return ARROW_LEFT_KEY;
+			default:
+				fprintf(stderr, "unknown fucker in control sequence (func read_input)\n");
 			}
 		}
 	} else if (seq[0] == '\177') {

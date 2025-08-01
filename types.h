@@ -14,7 +14,7 @@
 
 #define MAX_SEQ_LENGTH 8
 
-typedef struct {
+struct cursor_state { 
 	size_t* lengths;
 	size_t size;
 	size_t capacity;
@@ -22,6 +22,6 @@ typedef struct {
 	int dy;
 	int rows;
 	int columns;
-} CursorState;
+};
 
 #endif
