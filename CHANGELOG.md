@@ -1,3 +1,10 @@
 ## 2025-07-30
 ### -Fixed array memory corruption.
 ### -Todo: proper cursor control and movement; handle crashes/unexpected exits.
+
+## 2025-07-30
+### -State struct is used without typedef now.
+### -Partial code styling change.
+
+## 2025-08-04
+### -Pushed changes from July 30th.
