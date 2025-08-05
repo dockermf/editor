@@ -8,3 +8,6 @@
 
 ## 2025-08-04
 ### -Pushed changes from July 30th.
+
+## 2025-08-05
+### -Made progress towards better cursor movement control.
