@@ -10,11 +10,19 @@ static void log_debug_text(char* text)
 	fprintf(stderr, "%s\n", text);
 }
 
+static int get_line_length(struct cursor_state* state, int row)
+{
+	return state->lengths[row - 1];
+}
+
 static bool can_move_cursor(struct cursor_state* state, int dx, int dy)
-{ //TODO: fix this shit!!!
+{ //TODO: fix the fucking rules, so that
+  //      it remembers how many lines were
+  //      created and allows to move the
+  //      cursor freely.
 	int col = state->dx;
 	int row = state->dy;
-	int current_line_length = state->lengths[row - 1];
+	int current_line_length = get_line_length(state, row);
 	if (col + dx <= 0 || row + dy <= 0) {
 		log_debug_text("first");
 		return false;
@@ -22,19 +30,22 @@ static bool can_move_cursor(struct cursor_state* state, int dx, int dy)
 		if (dy != 0) return false;
 		log_debug_text("second");
 		return true;
-	} else if (col + dx > current_line_length && col + dx - current_line_length != 1) {
+	} else if (col + dx > current_line_length && col + dx - current_line_length > 1) {
 		fprintf(stderr, "%d\n", col + dx - current_line_length);
-		if (col + dx - current_line_length < 1) return true;
 		log_debug_text("third");
 		return false;
-	} else if (dy == 1 && current_line_length == 0) {
+	} else if (dy == 1 && get_line_length(state, row + 1) == 0) {
 		log_debug_text("fourth");
 		return false;
-	} else if ((dy == 1 || dy == -1) && col > current_line_length) {
+	} else if (dy != 0 && col > current_line_length) {
 		log_debug_text("fifth");
 		return false;
-	} else {
+	} else if (dy != 0 && get_line_length(state, row + dy) < current_line_length) {
 		log_debug_text("sixth");
+		return false;
+	} else {
+		log_debug_text("seventh");
+		fprintf(stderr, "l: %d, dx: %d, col: %d\n", current_line_length, dx, col);
 		return true;
 	}
 }
@@ -92,7 +103,7 @@ static void arr_increase_capacity(struct cursor_state* state)
 
 static void arr_push_char(struct cursor_state* state)
 {
-	if (state->dy > state->capacity) {
+	while (state->dy > state->capacity) {
 		fprintf(stderr, "Calling arr_increase_capacity() ");
 		arr_increase_capacity(state);
 	}
@@ -100,7 +111,7 @@ static void arr_push_char(struct cursor_state* state)
 	int col = state->dx;
 	// array index starts at 0, but row at 1
 	state->lengths[row - 1] += 1;
-	fprintf(stderr, "debug: row %d, length %ld\n", row, state->lengths[row - 1]);
+	fprintf(stderr, "debug: row %d, length %ld\n", row, get_line_length(state, row));
 }
 
 void init_array(struct cursor_state* state, size_t init_capacity)
@@ -120,6 +131,7 @@ void out(struct cursor_state* state, const int inp)
 	write(1, &inp, 1);
 	arr_push_char(state);
 	state->dx++;
+	if (state->dx - 1 != get_line_length(state, state->dy)) fprintf(stderr, "dx = %d while length = %d\n", state->dx - 1, state->lengths[state->dy - 1]);	
 	display_cursor_position(state);
 }
 
