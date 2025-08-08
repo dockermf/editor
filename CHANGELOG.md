@@ -11,3 +11,7 @@
 
 ## 2025-08-05
 ### -Made progress towards better cursor movement control.
+
+## 2025-08-08
+### -Made a working cursor movement, will need to polish a bit.
+### -Cursor movement rules refactored.

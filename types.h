@@ -16,6 +16,7 @@
 
 struct cursor_state { 
 	size_t* lengths;
+	size_t initialized_lines;
 	size_t size;
 	size_t capacity;
 	int dx;
