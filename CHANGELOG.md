@@ -15,3 +15,4 @@
 ## 2025-08-08
 ### -Made a working cursor movement, will need to polish a bit.
 ### -Cursor movement rules refactored.
+### -Slight changes to code style in [utils.c](utils.c).
