@@ -10,7 +10,7 @@ static void log_debug_text(char* text)
 	fprintf(stderr, "%s\n", text);
 }
 
-static int get_line_length(struct cursor_state* state, int line)
+static size_t get_line_length(struct cursor_state* state, int line)
 {
 	return state->lengths[line - 1];
 }
@@ -25,7 +25,7 @@ static bool can_move_cursor(struct cursor_state* state, int dx, int dy)
 	int col = state->dx;
 	int line = state->dy;
 	int line_length = get_line_length(state, line);
-	size_t total_lines = state->initialized_lines;
+	size_t total_lines = state->size;
 	if (col + dx <= 0 || line + dy <= 0)
 		return false;
 	if (dx != 0) {
@@ -107,20 +107,13 @@ static void arr_increase_capacity(struct cursor_state* state)
 {
 	size_t new_capacity = state->capacity * 2;
 	size_t* new_lengths = realloc(state->lengths, new_capacity * sizeof(*new_lengths));
-	//fprintf(stderr, "(memory: %ld -> %ld)\n", state->capacity * sizeof(*state->lengths), new_capacity * sizeof(*state->lengths));
 	if (!new_lengths) {
 		fprintf(stderr, "arr_increase_capacity() failed to reallocate memory\n");
 		exit(EXIT_FAILURE);
 	}
-	//fprintf(stderr, "arr_increase_capacity() allocated %ld bytes of memory\n", new_capacity * sizeof(*new_lengths));
 	init_array_extension(state, new_lengths);
-	//fprintf(stderr, "    Array values: ");
-	//print_array_values(new_lengths, new_capacity);
-	
 	state->lengths = new_lengths;
 	state->capacity = new_capacity;
-	
-	//fprintf(stderr, "\n    Size: %ld\n    Capacity: %ld\n    Allocated: %ld bytes\n", state->size, state->capacity, state->capacity * sizeof(*state->lengths));
 }
 
 static void check_arr_availability(struct cursor_state* state)
@@ -138,7 +131,7 @@ static void arr_push_char(struct cursor_state* state)
 	int col = state->dx;
 	size_t* length = get_line_length_pointer(state, line);
 	*length += 1;
-	fprintf(stderr, "debug: row %d, length %d\n", line, get_line_length(state, line));
+	fprintf(stderr, "debug: row %d, length %ld\n", line, get_line_length(state, line));
 }
 
 void init_array(struct cursor_state* state, size_t init_capacity)
@@ -146,7 +139,6 @@ void init_array(struct cursor_state* state, size_t init_capacity)
 	state->lengths = (size_t*) calloc(init_capacity, init_capacity * sizeof(*state->lengths));
 	state->size = 1;
 	state->capacity = init_capacity;
-	state->initialized_lines = 1;
 	if (state->lengths == NULL)
 		fprintf(stderr, "init_array() failed to allocate memory\n");
 	else
@@ -157,20 +149,29 @@ void out(struct cursor_state* state, const int inp)
 {
 	write(1, &inp, 1);
 	arr_push_char(state);
+	size_t length = get_line_length(state, state->dy);
+	if (state->dx != length)
+		fprintf(stderr, "dx = %d while length = %ld\n", state->dx, length);	
 	state->dx++;
-	if (state->dx - 1 != get_line_length(state, state->dy))
-		fprintf(stderr, "dx = %d while length = %ld\n", state->dx - 1, state->lengths[state->dy - 1]);	
 	display_cursor_position(state);
 }
 
 void do_backspace(struct cursor_state* state)
 {
-	if (!can_move_cursor(state, -1, 0))
-		return;
-	printf("\033[D \033[D");
-	size_t* length = get_line_length_pointer(state, state->dy);
-	state->dx--;
-	*length -= 1;
+	size_t* length = get_line_length_pointer(state, state->dy);	
+	if (!can_move_cursor(state, -1, 0)) {
+		if (*length == 0 && state->dy > 1) {
+			adjust_pos_to_lastchar(state, -1);
+			move_cursor(state, 1, 0);
+			state->size--;
+		} else {
+			return;
+		}
+	} else {
+		printf("\033[D \033[D");
+		*length -= 1;
+		state->dx--;
+	}
 	display_cursor_position(state);
 }
 
@@ -181,7 +182,6 @@ void do_enter(struct cursor_state* state)
 	state->dx = 1;
 	state->dy++;
 	state->size++;
-	state->initialized_lines++;
 	display_cursor_position(state);
 }
 
