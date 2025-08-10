@@ -9,16 +9,16 @@
 int main()
 {
 	size_t init_line_capacity = 1;
+	struct editor_buffer e;
 	struct cursor_state state = {
 		.dx = 1,
-		.dy = 1,
-		.rows = 0,
-		.columns = 0
+		.dy = 1
 	};
 	
-	init_array(&state, init_line_capacity);
+	init_cursor_state(&state, init_line_capacity);
+	init_editor_buf(&e);
 
-	enable_raw_mode(&state);
+	enable_raw_mode(&e);
 	
 	while (1) {
 		int inp = read_input();

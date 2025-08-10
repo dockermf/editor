@@ -20,8 +20,14 @@ struct cursor_state {
 	size_t capacity;
 	int dx;
 	int dy;
-	int rows;
-	int columns;
+};
+
+struct editor_buffer {
+	char** lines;
+	size_t* line_lengths;
+	size_t total_lines;
+	int screen_max_lines;
+	int screen_max_columns;
 };
 
 #endif

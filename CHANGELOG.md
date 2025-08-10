@@ -20,5 +20,10 @@
 ## 2025-08-09
 ### -Changed backspace logic to go on the previous line if the cursor is at the beginning of the current line.
 ### -TODO:
-        -Add internal buffer for tracking text changes and saving it to the file instead of just printing characters to stdout.
+        ~~-Add internal buffer for tracking text changes and saving it to the file instead of just printing characters to stdout.~~
+        -Fix any issues after adding the new buffer and make the buffer work.
         -Add proper file operations (save/edit).
+
+## 2025-08-10
+### -Added internal buffer, now i need to integrate it without breaking other parts of the code.
+### -Slightly changed code visually (empty lines, more distinctive code flow?).
