@@ -1,6 +1,7 @@
 #include <termios.h>
 #include <unistd.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <ctype.h>
 #include "types.h"
 
@@ -9,7 +10,7 @@
 struct termios config_in_use;
 struct termios raw;
 
-static void get_terminal_size(struct editor_buffer* e)
+static void get_terminal_size(struct cursor_state* state)
 { /* or I just could use ioctl instead of fucking with this */
 	char inp[SIZE] = "";
 	int idx = 0;
@@ -38,12 +39,12 @@ static void get_terminal_size(struct editor_buffer* e)
 		printf("Failed to get terminal screen size");
 		exit(EXIT_FAILURE);
 	} else {
-		e->screen_max_lines = lines;
-		e->screen_max_columns = columns;
+		state->screen_max_lines = lines;
+		state->screen_max_columns = columns;
 	}
 }
 
-void enable_raw_mode(struct editor_buffer* e)
+void enable_raw_mode(struct cursor_state* state)
 {
 	if (tcgetattr(STDIN_FILENO, &config_in_use) < 0) {
 		printf("Failed to save current terminal config\n");
@@ -66,7 +67,7 @@ void enable_raw_mode(struct editor_buffer* e)
 		exit(EXIT_FAILURE);
 	}
 	
-	get_terminal_size(e);
+	get_terminal_size(state);
 }
 
 void disable_raw_mode()

@@ -4,10 +4,17 @@
 #include <stdlib.h>
 #include <string.h>
 #include "types.h"
+#include "terminal.h"
 
 static void log_debug_text(char* text)
 {
 	fprintf(stderr, "%s\n", text);
+}
+
+static void kill_program()
+{
+	disable_raw_mode();
+	exit(EXIT_FAILURE);
 }
 
 static size_t get_line_length(struct cursor_state* state, int line)
@@ -25,7 +32,7 @@ static bool can_move_cursor(struct cursor_state* state, int dx, int dy)
 	int col = state->dx;
 	int line = state->dy;
 	size_t line_length = get_line_length(state, line);
-	size_t total_lines = state->size;
+	size_t total_lines = state->total_lines;
 	
 	if (col + dx <= 0 || line + dy <= 0)
 		return false;
@@ -61,7 +68,7 @@ static bool needs_adjustment(struct cursor_state* state, int dx, int dy)
 static void display_cursor_position(struct cursor_state* state)
 {
 	int offset = 9;
-	printf("\033[%i;%iH", state->rows, state->columns - offset);
+	printf("\033[%i;%iH", state->screen_max_lines, state->screen_max_columns - offset);
 	printf("%i, %i  ", state->dy, state->dx);
 	printf("\033[%i;%iH", state->dy, state->dx);
 }
@@ -93,6 +100,7 @@ void move_cursor(struct cursor_state* state, int dx, int dy)
 		adjust_pos_to_lastchar(state, dy);
 	else
 		update_cursor_position(state, dx, dy);
+
 	printf("\033[%i;%iH", state->dy, state->dx);
 	display_cursor_position(state);
 }
@@ -116,7 +124,7 @@ static void arr_increase_capacity(struct cursor_state* state)
 	
 	if (!new_lengths) {
 		fprintf(stderr, "arr_increase_capacity() failed to reallocate memory\n");
-		exit(EXIT_FAILURE);
+		kill_program();
 	}
 	
 	init_array_extension(state, new_lengths);
@@ -132,28 +140,94 @@ static void check_arr_availability(struct cursor_state* state)
 	}
 }
 
-static void arr_push_char(struct cursor_state* state)
+static void arr_push_char(struct cursor_state* state,
+			  struct editor_buffer* buf/*,
+			  const int c*/)
 {
-	/* TODO: make it push to the editor buffer */
+	/* TODO: wtf is this, kill */
 	check_arr_availability(state);
-	int line = state->dy;
-	size_t* length = get_line_length_pointer(state, line);
+	int line_number = state->dy;
+	int col = state->dx;
+	size_t* length = get_line_length_pointer(state, line_number);
+	//char* line = get_line_pointer(buf, line_number);
+	
+	//line[line_number][col] = c;
 	*length += 1;
-	fprintf(stderr, "debug: line %d, length %ld\n", line, get_line_length(state, line));
+	fprintf(stderr, "debug: line %d, length %ld\n", line_number, *length);
 }
 
 void init_cursor_state(struct cursor_state* state, size_t init_capacity)
 {
-	state->size = 1;
+	state->total_lines = 1;
 	state->capacity = init_capacity;
 	state->lengths = calloc(init_capacity, init_capacity * sizeof(*state->lengths));
+	
 	if (!state->lengths) {
 		log_debug_text("init_cursor_state() failed to allocate memory");
-		exit(EXIT_FAILURE);
+		kill_program();
 	}
 }
 
-void init_editor_buf(struct editor_buffer* e)
+static size_t buf_get_line_length(struct editor_buffer* buf, const int line)
+{
+	return buf->line_lengths[line - 1];
+}
+
+static size_t* buf_get_line_length_pointer(struct editor_buffer* buf, const int line)
+{
+	return &buf->line_lengths[line - 1];
+}
+
+static void buf_extend_lines(struct editor_buffer* buf)
+{
+	log_debug_text("buf_extend_lines() attempting to extend");
+	size_t current = buf->total_lines;
+	size_t line_length = 2;
+	char** new_pointer = realloc(buf->lines, current * 2);
+	
+	if (!new_pointer) {
+		log_debug_text("buf_extend_lines() failed reallocating memory, exiting");
+		kill_program();
+	}
+
+	for (int i = current; i < current * 2; i++)
+		new_pointer[i] = malloc(line_length * sizeof(**new_pointer));
+	
+	buf->lines = new_pointer;
+	buf->total_lines *= 2;
+	log_debug_text("buf_extend_lines() success");
+}
+
+static void buf_put_char(struct editor_buffer* buf, struct cursor_state* state, const int c)
+{
+	int col = state->dx;
+	int line = state->dy;
+	
+	if (line > buf->total_lines) {
+		log_debug_text("buf_put_char() not enough lines, calling buf_extend_lines()");
+		buf_extend_lines(buf);
+	}
+	/* TODO: fix incorrect write */
+	buf->lines[line - 1][col - 1] = c;
+	log_debug_text("???????");
+	fprintf(stderr, "line %d: %s\n", line, buf->lines[line]);
+}
+
+static void init_buf_lines(char** lines, size_t size)
+{
+	log_debug_text("init_buf_lines() initializing the lines...");
+	for (int i = 0; i < size; i++) {
+		char* mem = malloc(size * sizeof(**lines));
+		if (!mem) {
+			log_debug_text("init_buf_lines() failed to allocate memory");
+			kill_program();
+		}
+		lines[i] = mem;
+	}
+	log_debug_text("init_buf_lines() success");
+}
+
+void init_editor_buf(struct editor_buffer* buf)
 {
 	size_t initial_size = 2;
 	size_t* line_lengths = malloc(initial_size * sizeof(*line_lengths));
@@ -162,19 +236,29 @@ void init_editor_buf(struct editor_buffer* e)
 	if (!line_lengths ||
 	    !lines) {
 		log_debug_text("init_editor_buf() failed to allocate memory");
-		exit(EXIT_FAILURE);
+		kill_program();
 	}
 	
-	e->total_lines = initial_size;
-	e->lines = lines;
-	e->line_lengths = line_lengths;
+	init_buf_lines(lines, initial_size);
+	buf->total_lines = initial_size;
+	buf->lines = lines;
+	buf->line_lengths = line_lengths;
 }
 
-void out(struct cursor_state* state, const int inp)
+static void redraw_screen()
+{
+	/* TBD */
+}
+
+void write_to_buffer(struct cursor_state* state, struct editor_buffer* buf, const int c)
 {
 	/* TODO: write to buf, then redraw */
-	write(1, &inp, 1);
-	arr_push_char(state);
+	//write(1, &c, 1);
+	fprintf(stderr, "lines: %ld\n", buf->total_lines);
+	log_debug_text("write_to_buffer() calling buf_put_char()");
+	buf_put_char(buf, state, c);
+	//arr_push_char(state, buf);
+	redraw_screen();
 	size_t length = get_line_length(state, state->dy);
 	if (state->dx != length)
 		fprintf(stderr, "length mismatch: dx is %d while length is %ld\n", state->dx, length);	
@@ -190,7 +274,7 @@ void do_backspace(struct cursor_state* state)
 		if (*length == 0 && state->dy > 1) {
 			adjust_pos_to_lastchar(state, -1);
 			move_cursor(state, 1, 0);
-			state->size--;
+			state->total_lines--;
 		} else {
 			return;
 		}
@@ -204,11 +288,13 @@ void do_backspace(struct cursor_state* state)
 
 void do_enter(struct cursor_state* state)
 {
+	log_debug_text("pressed enter");
 	check_arr_availability(state);
 	printf("\033[E");
 	state->dx = 1;
 	state->dy++;
-	state->size++;
+	/*TODO: actually increase memory for buf->lines on enter press */
+	state->total_lines++;
 	display_cursor_position(state);
 }
 
