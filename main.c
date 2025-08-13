@@ -43,7 +43,7 @@ int main()
 			do_backspace(&state);
 			break;
 		case ENTER:
-			do_enter(&state);
+			do_enter(&state, &e);
 			break;
 		default:
 			write_to_buffer(&state, &e, inp);

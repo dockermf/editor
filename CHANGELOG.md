@@ -22,7 +22,7 @@
 ### -TODO:
         ~~-Add internal buffer for tracking text changes and saving it to the file instead of just printing characters to stdout.~~
         -Fix any issues after adding the new buffer and make the buffer work.
-            -Buffer change on enter key press should be fixed (needs to actually increase allocated memory).
+            ~~-Buffer change on enter key press should be fixed (needs to actually increase allocated memory).~~
         -Remove unnecessary functions in the code.
         -Add proper file operations (save/edit).
 
@@ -32,3 +32,7 @@
 
 ## 2025-08-12
 ### -Changed text buffer control a bit, overall made some progress.
+
+## 2025-08-13
+### -Fixed enter key press not reallocating buffer memory size to write on new lines.
+### -Fixed not tracking/changing lines' lengths in the buffer.
