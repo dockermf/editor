@@ -9,14 +9,13 @@
 int main()
 {
 	size_t init_line_capacity = 1;
-	struct editor_buffer e;
+	struct editor_buffer buf;
 	struct cursor_state state = {
 		.dx = 1,
 		.dy = 1
 	};
 	
-	init_cursor_state(&state, init_line_capacity);
-	init_editor_buf(&e);
+	init_editor_buf(&buf);
 	
 	enable_raw_mode(&state);
 	
@@ -28,29 +27,29 @@ int main()
 
 		switch (inp) {
 		case ARROW_UP_KEY:
-			move_cursor(&state, 0, -1);
+			move_cursor(&buf, &state, 0, -1);
 			break;
 		case ARROW_DOWN_KEY:
-			move_cursor(&state, 0, 1);
+			move_cursor(&buf, &state, 0, 1);
 			break;
 		case ARROW_RIGHT_KEY:
-			move_cursor(&state, 1, 0);
+			move_cursor(&buf, &state, 1, 0);
 			break;
 		case ARROW_LEFT_KEY:
-			move_cursor(&state, -1, 0);
+			move_cursor(&buf, &state, -1, 0);
 			break;
 		case BACKSPACE:
-			do_backspace(&state);
+			do_backspace(&buf, &state);
 			break;
 		case ENTER:
-			do_enter(&state, &e);
+			do_enter(&buf, &state);
 			break;
 		default:
-			write_to_buffer(&state, &e, inp);
+			write_to_buffer(&buf, &state, inp);
 		}
 	}
 	disable_raw_mode();
-	free(state.lengths);
-	fprintf(stderr, "Freed array\n");
+	/* free array here */
+	//fprintf(stderr, "Freed array\n");
 	return 0;
 }

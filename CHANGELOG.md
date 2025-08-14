@@ -36,3 +36,8 @@
 ## 2025-08-13
 ### -Fixed enter key press not reallocating buffer memory size to write on new lines.
 ### -Fixed not tracking/changing lines' lengths in the buffer.
+
+## 2025-08-14
+### -Fixed buffer and cursor structs, now ALL line related stuff is accessed via buffer struct instead of the cursor struct.
+### -Removed most (if not all) unnecessary functions.
+### -Made it so it adds null terminating character at the end of a line in the buffer.

@@ -14,20 +14,24 @@
 
 #define MAX_SEQ_LENGTH 8
 
+/**
+ * IMPORTANT:
+ * Member indexing starts from 0, where line count from 1, so accessing
+ * any info related to lines would look like this: .member[line - 1].
+ */
+
 struct cursor_state { 
-	size_t* lengths;
-	size_t total_lines;
-	size_t capacity;
-	int screen_max_lines;
-	int screen_max_columns;
-	int dx;
-	int dy;
+	int screen_max_lines;   /* self explanatory */
+	int screen_max_columns; /* self explanatory */
+	int dx;                 /* cursor's current X position */
+	int dy;                 /* cursor's current Y position */
 };
 
 struct editor_buffer {
-	char** lines;
-	size_t* line_lengths;
-	size_t total_lines;
+	char** lines;            /* .lines[i] = line pointer, .lines[i][j] = character in a line */
+	size_t* line_max_length; /* used to know how many characters lines[i] can hold, including '\0' */
+	size_t* line_lengths;    /* used to know how long current line is, including '\0' */
+	size_t lines_total;      /* used to know how many pointers .lines can hold, useful for realloc'ing line related member sizes */
 };
 
 #endif
