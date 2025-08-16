@@ -38,5 +38,5 @@
 
 ## 2025-08-16
 ### -Changed initial line length's memory size (2 -> 256 bytes) to prevent often realloc calls and hence reducing allocation failure cases.
-### -Added memmove when putting a character in the middle of a line.
+### -Added memmove for character insertion + deletion.
 ### -Removed todo list from here.
