@@ -176,16 +176,44 @@ static void buf_put_char(struct editor_buffer* buf, struct cursor_state* state, 
 	size_t* length_pointer = get_line_length_pointer(buf, line);
 	*length_pointer += 1;
 	
-	if (col < get_line_length(buf, line)) {
-		fprintf(stderr, "before memmove(): %s\n", buf->lines[line - 1]);
+	if (col < get_line_length(buf, line))
 		memmove(&buf->lines[line - 1][col], &buf->lines[line - 1][col - 1], *length_pointer - col);
-		fprintf(stderr, "after memmove(): %s\n", buf->lines[line - 1]);
-	}
 	
 	buf->lines[line - 1][col - 1] = c;
 	buf->lines[line - 1][*length_pointer] = '\0';
+	
+	/* VISUALIZATION
+	 * 01234   <- line indexes
+	 * test\0
+	 *  ^      <- cursor
+	 * 12345   <- cursor indexes
+	 * teest
+	 * tXest\0
+	 *   ^
+	 *  */
+}
 
-	fprintf(stderr, "line %d: %s\n", line, buf->lines[line - 1]);
+static void buf_remove_char(struct editor_buffer* buf, struct cursor_state* state)
+{
+	int line = state->dy;
+	int col = state->dx;
+	size_t* length_pointer = get_line_length_pointer(buf, line);
+	
+	if (col < get_line_length(buf, line))
+		memmove(&buf->lines[line - 1][col - 2], &buf->lines[line - 1][col - 1], *length_pointer - col + 1);
+	
+	*length_pointer -= 1;
+	buf->lines[line - 1][*length_pointer] = '\0';
+	
+	/* VISUALIZATION
+	 * 01234 <- line indexes
+	 * test\0
+	 *  ^    <- cursor
+	 * 12345 <- cursor indexes
+	 * estt\0
+	 * est\0\0
+	 * ^
+	 *  */
 }
 
 static void init_buf_lines(struct editor_buffer* buf, size_t size)
@@ -265,6 +293,7 @@ void write_to_buffer(struct editor_buffer* buf, struct cursor_state* state, cons
 
 	log_debug_text("write_to_buffer() calling buf_put_char()");
 	buf_put_char(buf, state, c);
+	fprintf(stderr, "line: %s\n", buf->lines[state->dy - 1]);
 	
 	//log_debug_text("write_to_buffer() calling redraw_screen()");
 	redraw_screen();
@@ -275,7 +304,6 @@ void write_to_buffer(struct editor_buffer* buf, struct cursor_state* state, cons
 
 void do_backspace(struct editor_buffer* buf, struct cursor_state* state)
 {
-	/* TODO: make it remove last character from the buffer */
 	size_t* length = get_line_length_pointer(buf, state->dy);
 
 	if (!can_move_cursor(buf, state, -1, 0)) {
@@ -286,10 +314,11 @@ void do_backspace(struct editor_buffer* buf, struct cursor_state* state)
 			return;
 		}
 	} else {
-		printf("\033[D \033[D");
-		*length -= 1;
+		buf_remove_char(buf, state);
+		redraw_screen();
 		state->dx -= 1;
 	}
+	fprintf(stderr, "line: %s\n", buf->lines[state->dy - 1]);
 	display_cursor_position(state);
 }
 
