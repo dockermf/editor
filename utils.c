@@ -6,6 +6,7 @@
 #include "types.h"
 #include "terminal.h"
 
+
 static void log_debug_text(char* text)
 {
 	fprintf(stderr, "%s\n", text);
@@ -171,10 +172,19 @@ static void buf_put_char(struct editor_buffer* buf, struct cursor_state* state, 
 {
 	int col = state->dx;
 	int line = state->dy;
-
+	
+	size_t* length_pointer = get_line_length_pointer(buf, line);
+	*length_pointer += 1;
+	
+	if (col < get_line_length(buf, line)) {
+		fprintf(stderr, "before memmove(): %s\n", buf->lines[line - 1]);
+		memmove(&buf->lines[line - 1][col], &buf->lines[line - 1][col - 1], *length_pointer - col);
+		fprintf(stderr, "after memmove(): %s\n", buf->lines[line - 1]);
+	}
+	
 	buf->lines[line - 1][col - 1] = c;
-	buf->lines[line - 1][col] = '\0';
-	buf->line_lengths[line - 1] += 1;
+	buf->lines[line - 1][*length_pointer] = '\0';
+
 	fprintf(stderr, "line %d: %s\n", line, buf->lines[line - 1]);
 }
 
@@ -182,7 +192,7 @@ static void init_buf_lines(struct editor_buffer* buf, size_t size)
 {
 	log_debug_text("init_buf_lines() initializing the lines...");
 	for (int i = 0; i < size; i++) {
-		char* mem = malloc(size * sizeof(**buf->lines));
+		char* mem = malloc(INIT_LINE_LENGTH * sizeof(**buf->lines));
 		
 		if (!mem) {
 			log_debug_text("init_buf_lines() failed to allocate memory");
@@ -190,14 +200,14 @@ static void init_buf_lines(struct editor_buffer* buf, size_t size)
 		}
 		
 		buf->lines[i] = mem;
-		buf->line_max_length[i] = size;
+		buf->line_max_length[i] = INIT_LINE_LENGTH;
 	}
 	log_debug_text("init_buf_lines() success");
 }
 
 void init_editor_buf(struct editor_buffer* buf)
 {
-	size_t initial_size = 2;
+	size_t initial_size = 10;
 	size_t* line_lengths = calloc(initial_size, initial_size * sizeof(*line_lengths));
 	size_t* line_max_length = calloc(initial_size, initial_size * sizeof(*line_max_length));
 	char** lines = malloc(initial_size * sizeof(*lines));
@@ -258,9 +268,7 @@ void write_to_buffer(struct editor_buffer* buf, struct cursor_state* state, cons
 	
 	//log_debug_text("write_to_buffer() calling redraw_screen()");
 	redraw_screen();
-	size_t length = get_line_length(buf, state->dy);
-	if (state->dx != length)
-		fprintf(stderr, "length mismatch: dx is %d while length is %ld\n", state->dx, length);	
+	
 	state->dx += 1;
 	display_cursor_position(state);
 }

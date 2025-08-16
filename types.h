@@ -7,12 +7,12 @@
 #define ARROW_DOWN_KEY 257
 #define ARROW_RIGHT_KEY 258
 #define ARROW_LEFT_KEY 259
-
 #define BACKSPACE 010
-
 #define ENTER 015
 
 #define MAX_SEQ_LENGTH 8
+
+#define INIT_LINE_LENGTH 256
 
 /**
  * IMPORTANT:
