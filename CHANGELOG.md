@@ -44,3 +44,4 @@
 ## 2025-08-17
 ### -Fixed unnoticed memset bug (it didn't set the pointer's extension with data like size\_t due to size\_t being 4 or 8 bytes, while memset sets individual bytes, so it was changed to for loop assignment).
 ### -Added line refresh on the screen, takes characters from the text buffer and spits them to stdout (terminal).
+### -Added todo list in [main.c](main.c).

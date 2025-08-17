@@ -6,6 +6,17 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+
+/* General TODO list:
+ * -Search and fix any bugs with the buffer writing/screen rfreshing.
+ * -Add file write/read operations.
+ * -Polish everything in general.
+ * -Optional:
+ *   -Once finished, refactor the code:
+ *     -Use arena allocator + gap buffer for insert/delete operations.
+ *     -Use different arena allocator to store each line's offset in another arena.
+ * */
+
 int main()
 {
 	struct editor_buffer buf;

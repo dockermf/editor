@@ -131,7 +131,6 @@ static void init_ptr_extension(struct editor_buffer* buf, size_t* ptr, size_t va
 {
 	for (int i = buf->lines_total; i < buf->lines_total * 2; i++)
 		ptr[i] = value;
-
 }
 
 static void buf_extend_capacity(struct editor_buffer* buf)
@@ -273,10 +272,9 @@ static void redraw_screen(struct editor_buffer* buf, struct cursor_state* state)
 static void extend_line_capacity(struct editor_buffer* buf, struct cursor_state* state)
 {
 	log_debug_text("extend_line_capacity() attempting to extend");
-	char* old_line_ptr = buf->lines[state->dy - 1];
-	size_t* old_max_ptr = &buf->line_max_length[state->dy - 1];
+	char* old_line_ptr = get_line_pointer(buf, state->dy);
+	size_t* old_max_ptr = get_max_line_length_pointer(buf, state->dy);
 	size_t new_max = *old_max_ptr * 2;
-	fprintf(stderr, "ptr: %p\nline: %s\nmax: %ld\nnew max: %ld\ny: %d\n", (void*)old_line_ptr, old_line_ptr, *old_max_ptr, new_max, state->dy);
 	char* new_line_ptr = realloc(old_line_ptr, new_max * sizeof(*new_line_ptr));
 
 	if (!new_line_ptr) {
@@ -299,15 +297,13 @@ static void check_line_capacity(struct editor_buffer* buf, struct cursor_state* 
 
 void write_to_buffer(struct editor_buffer* buf, struct cursor_state* state, const int c)
 {
-	/* TODO: write to buf, then redraw */
 	log_debug_text("write_to_buffer() calling check_line_capacity()");
 	check_line_capacity(buf, state);
 
 	log_debug_text("write_to_buffer() calling buf_put_char()");
 	buf_put_char(buf, state, c);
-	fprintf(stderr, "line: %s\n", buf->lines[state->dy - 1]);
 	
-	//log_debug_text("write_to_buffer() calling redraw_screen()");
+	log_debug_text("write_to_buffer() calling redraw_screen()");
 	redraw_screen(buf, state);
 	
 	state->dx += 1;
