@@ -8,7 +8,6 @@
 
 int main()
 {
-	size_t init_line_capacity = 1;
 	struct editor_buffer buf;
 	struct cursor_state state = {
 		.dx = 1,

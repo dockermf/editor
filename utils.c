@@ -127,20 +127,20 @@ static void print_ptr_values(size_t* ptr, const size_t capacity)
 		fprintf(stderr, "[%ld]", ptr[i]);
 }
 
-static void init_ptr_extension(struct editor_buffer* buf, size_t* ptr)
+static void init_ptr_extension(struct editor_buffer* buf, size_t* ptr, size_t value)
 {
-	/* Note: buf->lines_total * sizeof(*new_lengths_pointer) is the second half of our now doubled memory, */
-	/* 	 each block of which we initialize to 0. */
-	memset(&ptr[buf->lines_total], 0, buf->lines_total * sizeof(*ptr));
+	for (int i = buf->lines_total; i < buf->lines_total * 2; i++)
+		ptr[i] = value;
+
 }
 
 static void buf_extend_capacity(struct editor_buffer* buf)
 {
 	log_debug_text("buf_extend_capacity() attempting to extend");
 	size_t new_total = buf->lines_total * 2;
-	size_t initial_length = 2;
 	char** new_lines_pointer = realloc(buf->lines, new_total * sizeof(*new_lines_pointer));
 	size_t* new_lengths_pointer = realloc(buf->line_lengths, new_total * sizeof(*new_lengths_pointer));
+	size_t* new_max_length_pointer = realloc(buf->line_max_length, new_total * sizeof(*new_max_length_pointer));
 	
 	if (!new_lines_pointer ||
 	    !new_lengths_pointer) {
@@ -149,12 +149,14 @@ static void buf_extend_capacity(struct editor_buffer* buf)
 	}
 
 	for (int i = buf->lines_total; i < new_total; i++)
-		new_lines_pointer[i] = malloc(initial_length * sizeof(**new_lines_pointer));
+		new_lines_pointer[i] = malloc(INIT_LINE_LENGTH * sizeof(**new_lines_pointer));
 	
-	init_ptr_extension(buf, new_lengths_pointer);
-
+	init_ptr_extension(buf, new_lengths_pointer, 0);
+	init_ptr_extension(buf, new_max_length_pointer, INIT_LINE_LENGTH);
+	
 	buf->lines = new_lines_pointer;
 	buf->line_lengths = new_lengths_pointer;
+	buf->line_max_length = new_max_length_pointer;
 	buf->lines_total = new_total;
 	
 	log_debug_text("buf_extend_capacity() success");
@@ -198,14 +200,14 @@ static void buf_remove_char(struct editor_buffer* buf, struct cursor_state* stat
 	int line = state->dy;
 	int col = state->dx;
 	size_t* length_pointer = get_line_length_pointer(buf, line);
-	
-	if (col < get_line_length(buf, line))
+
+	if (col <= *length_pointer)
 		memmove(&buf->lines[line - 1][col - 2], &buf->lines[line - 1][col - 1], *length_pointer - col + 1);
 	
 	*length_pointer -= 1;
 	buf->lines[line - 1][*length_pointer] = '\0';
 	
-	/* VISUALIZATION
+	/* VISUALIZATION (removes 1 char left to cursor)
 	 * 01234 <- line indexes
 	 * test\0
 	 *  ^    <- cursor
@@ -253,18 +255,28 @@ void init_editor_buf(struct editor_buffer* buf)
 	init_buf_lines(buf, initial_size);
 }
 
-static void redraw_screen()
+static void redraw_screen(struct editor_buffer* buf, struct cursor_state* state)
 {
-	/* TBD */
-	/* Idea: iterate over buf->lines[line] and write out each character */
+	const char* erase_line = "\033[2K";
+	const char r_carriage = '\r';
+
+	write(1, &r_carriage, 1);
+	write(1, erase_line, strlen(erase_line));
+
+	for (int i = 0; i < get_line_length(buf, state->dy); i++) {
+		char c = buf->lines[state->dy - 1][i];
+		write(1, &c, 1);
+	}
+	move_cursor(buf, state, 0, 0);
 }
 
 static void extend_line_capacity(struct editor_buffer* buf, struct cursor_state* state)
 {
 	log_debug_text("extend_line_capacity() attempting to extend");
-	char* old_line_ptr = get_line_pointer(buf, state->dy);
-	size_t* old_max_ptr = get_max_line_length_pointer(buf, state->dy);
+	char* old_line_ptr = buf->lines[state->dy - 1];
+	size_t* old_max_ptr = &buf->line_max_length[state->dy - 1];
 	size_t new_max = *old_max_ptr * 2;
+	fprintf(stderr, "ptr: %p\nline: %s\nmax: %ld\nnew max: %ld\ny: %d\n", (void*)old_line_ptr, old_line_ptr, *old_max_ptr, new_max, state->dy);
 	char* new_line_ptr = realloc(old_line_ptr, new_max * sizeof(*new_line_ptr));
 
 	if (!new_line_ptr) {
@@ -296,7 +308,7 @@ void write_to_buffer(struct editor_buffer* buf, struct cursor_state* state, cons
 	fprintf(stderr, "line: %s\n", buf->lines[state->dy - 1]);
 	
 	//log_debug_text("write_to_buffer() calling redraw_screen()");
-	redraw_screen();
+	redraw_screen(buf, state);
 	
 	state->dx += 1;
 	display_cursor_position(state);
@@ -315,7 +327,7 @@ void do_backspace(struct editor_buffer* buf, struct cursor_state* state)
 		}
 	} else {
 		buf_remove_char(buf, state);
-		redraw_screen();
+		redraw_screen(buf, state);
 		state->dx -= 1;
 	}
 	fprintf(stderr, "line: %s\n", buf->lines[state->dy - 1]);
