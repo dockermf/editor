@@ -45,3 +45,7 @@
 ### -Fixed unnoticed memset bug (it didn't set the pointer's extension with data like size\_t due to size\_t being 4 or 8 bytes, while memset sets individual bytes, so it was changed to for loop assignment).
 ### -Added line refresh on the screen, takes characters from the text buffer and spits them to stdout (terminal).
 ### -Added todo list in [main.c](main.c).
+
+## 2025-08-18
+### -Created [helpers.h](helpers.h) and [helpers.c](helpers.c) files to clean up [utils.c](utils.c).
+### -Made it possible to pass a filename as an argument to the editor and it checks if the filename already exists, will help with file operations in the future.

@@ -12,6 +12,8 @@
 
 #define MAX_SEQ_LENGTH 8
 
+#define MAX_PATH_SIZE 256
+
 #define INIT_LINE_LENGTH 256
 
 /**

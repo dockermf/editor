@@ -17,8 +17,13 @@
  *     -Use different arena allocator to store each line's offset in another arena.
  * */
 
-int main()
+int main(int argc, char* argv[])
 {
+	if (argc > 1)
+		handle_command_line_args(argc, argv);
+	if (argc > 2)
+		fprintf(stderr, "main() can't feed more than 1 file name, only working with the first\n");
+
 	struct editor_buffer buf;
 	struct cursor_state state = {
 		.dx = 1,
