@@ -25,7 +25,8 @@ void handle_command_line_args(int argc, char* argv[])
 		log_debug_text("handle_command_line_args() file exists");
 	} else {
 		/* create the file to write to */
-		log_debug_text("handle_command_line_args() file doesn't exist");
+		log_debug_text("handle_command_line_args() provided file doesn't exist, calling file_create()");
+		file_create(filename);
 	}
 
 }
@@ -130,7 +131,7 @@ int read_input()
 			case 'D':
 				return ARROW_LEFT_KEY;
 			default:
-				fprintf(stderr, "unknown fucker in control sequence (func read_input)\n");
+				log_debug_text("unknown fucker in control sequence (func read_input)");
 			}
 		}
 	} else if (seq[0] == '\177') {

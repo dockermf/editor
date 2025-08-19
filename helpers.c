@@ -33,6 +33,20 @@ void open_current_directory(char* cwd, DIR** dir)
 	}
 }
 
+void file_create(char* filename)
+{
+	log_debug_text("file_create() starting");
+	FILE* file_pointer;
+	file_pointer = fopen(filename, "w");
+	fclose(file_pointer);
+	log_debug_text("file_create() finished");
+}
+
+void file_write()
+{
+	
+}
+
 bool is_file_present(DIR* dir, char* filename)
 {
 	struct dirent* e;

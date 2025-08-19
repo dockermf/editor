@@ -7,6 +7,8 @@ void kill_program(void);
 void get_current_directory(char* cwd);
 void open_current_directory(char* cwd, DIR** directory);
 bool is_file_present(DIR* directory, char* filename);
+void file_create(char* filename);
+void file_write();
 
 size_t get_line_length(struct editor_buffer* buf, const int line);
 size_t get_max_line_length(struct editor_buffer* buf, const int line);
