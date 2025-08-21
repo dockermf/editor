@@ -2,25 +2,38 @@
 #include <stdio.h>
 #include <string.h>
 
-static void init_arr(char** ptr)
+/* A file for practicing and testing */
+
+void print_lines(FILE* fptr)
 {
-	for (int i = 0; i < 3; i++)
-		ptr[i] = malloc(10 * sizeof(**ptr));
+	char buf[128];
+	while (fgets(buf, 64, fptr))
+		fprintf(stdout, "%s", buf);
+}
+
+void print_address(FILE* fptr)
+{
+	fprintf(stdout, "Address: %ld\n", ftell(fptr));
 }
 
 int main()
 {
-	char** lines = malloc(3 * sizeof(*lines));
-	init_arr(lines);
+	/* open the file */
+	FILE* fptr = fopen("example.txt", "r");
 	
-	for (int i = 0; i < 3; i++) {
-		for (int j = 0; j < 10; j++)
-			lines[i][j] = 'a';
-	}
-	lines[0][9] = '\0';
-	for (int i = 0; i < 3; i++) {
-		printf("lines[%d]: %s %d\n", i, lines[i], strlen(lines[i]));
-	}
+	/* read the the lines */
+	print_lines(fptr);
+	/* rewind file's pointer position back to the beginning */
+	rewind(fptr);
+	
+	/* close the file */
+	fclose(fptr);
+
+	/* write setup */
+	fptr = fopen("example.txt", "a");
+	fprintf(fptr, "something\n");
+	print_lines(fptr);
+	fclose(fptr);
 
 	return 0;
 }

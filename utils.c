@@ -48,8 +48,8 @@ void move_cursor(struct editor_buffer* buf, struct cursor_state* state, const in
 void init_editor_buf(struct editor_buffer* buf)
 {
 	size_t initial_size = 10;
-	size_t* line_lengths = calloc(initial_size, initial_size * sizeof(*line_lengths));
-	size_t* line_max_length = calloc(initial_size, initial_size * sizeof(*line_max_length));
+	size_t* line_lengths = calloc(initial_size, sizeof(*line_lengths));
+	size_t* line_max_length = calloc(initial_size, sizeof(*line_max_length));
 	char** lines = malloc(initial_size * sizeof(*lines));
 	
 	if (!line_lengths ||
@@ -115,7 +115,6 @@ void do_enter(struct editor_buffer* buf, struct cursor_state* state)
 
 int read_input()
 {
-	/* TODO: make control + key press detection */
 	char seq[MAX_SEQ_LENGTH];
 	ssize_t n = read(STDIN_FILENO, &seq, MAX_SEQ_LENGTH);
 	
@@ -132,12 +131,21 @@ int read_input()
 				return ARROW_LEFT_KEY;
 			default:
 				log_debug_text("unknown fucker in control sequence (func read_input)");
+				return EXIT;
 			}
 		}
-	} else if (seq[0] == '\177') {
-		return BACKSPACE;
-	} else if (seq[0] == '\015') {
-		return ENTER;
 	}
-	return seq[0];
+
+	/* Note: for control character codes lookup ascii control characters, or just do: [ascii] & 0x1F, which */
+	/* 	 will give you the exact same control ascii code. */
+	switch (seq[0]) {
+	case '\177':
+		return BACKSPACE;
+	case '\015':
+		return ENTER;
+	case '\021':
+		return EXIT;
+	default:
+		return seq[0];
+	}
 }

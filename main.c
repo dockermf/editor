@@ -37,7 +37,7 @@ int main(int argc, char* argv[])
 	while (1) {
 		int inp = read_input();
 		
-		if (inp == 'X')
+		if (inp == EXIT)
 			break;
 
 		switch (inp) {

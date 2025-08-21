@@ -3,6 +3,7 @@
 #ifndef MY_DATA_TYPES_H
 #define MY_DATA_TYPES_H
 
+/* TODO: use enums instead */
 #define ARROW_UP_KEY 256
 #define ARROW_DOWN_KEY 257
 #define ARROW_RIGHT_KEY 258
@@ -10,7 +11,9 @@
 #define BACKSPACE 010
 #define ENTER 015
 
-#define MAX_SEQ_LENGTH 8
+#define EXIT 260
+
+#define MAX_SEQ_LENGTH 9
 
 #define MAX_PATH_SIZE 256
 

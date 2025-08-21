@@ -49,3 +49,7 @@
 ## 2025-08-18
 ### -Created [helpers.h](helpers.h) and [helpers.c](helpers.c) files to clean up [utils.c](utils.c).
 ### -Made it possible to pass a filename as an argument to the editor and it checks if the filename already exists, will help with file operations in the future.
+
+## 2025-08-21
+### -Figured how to detect control characters (ie ^C), changed exit key combination to ctrl + Q.
+### -Fixed unnoticed calloc typo (allocating more than was intended).
