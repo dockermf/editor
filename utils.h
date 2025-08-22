@@ -4,11 +4,12 @@
 #include "types.h"
 
 int read_input(void);
-void handle_command_line_args(int, char**);
-void move_cursor(struct editor_buffer*, struct cursor_state*, const int, const int);
-void write_to_buffer(struct editor_buffer*, struct cursor_state*, const int);
-void do_backspace(struct editor_buffer*, struct cursor_state*);
-void do_enter(struct editor_buffer*, struct cursor_state*);
-void init_editor_buf(struct editor_buffer*);
+void handle_command_line_args(struct editor_buffer *buf, struct cursor_state *s, int argc, char **argv);
+void save_and_exit(struct editor_buffer *buf, char *filename);
+void move_cursor(struct editor_buffer *buf, struct cursor_state *s, const int dx, const int dy);
+void write_to_buffer(struct editor_buffer *buf, struct cursor_state *s, const int c);
+void do_backspace(struct editor_buffer *buf, struct cursor_state *s);
+void do_enter(struct editor_buffer *buf, struct cursor_state *s);
+void init_editor_buf(struct editor_buffer *buf);
 
 #endif

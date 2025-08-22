@@ -8,12 +8,12 @@
 #include "helpers.h"
 
 
-void handle_command_line_args(int argc, char* argv[])
+void handle_command_line_args(struct editor_buffer *buf, struct cursor_state *state, int argc, char *argv[])
 {
 	bool file_exists;
-	char* filename = argv[1];
+	char *filename = argv[1];
 	char cwd[MAX_PATH_SIZE];
-	DIR* dir;
+	DIR *dir;
 
 	get_current_directory(cwd);
 	open_current_directory(cwd, &dir);
@@ -21,17 +21,23 @@ void handle_command_line_args(int argc, char* argv[])
 	file_exists = is_file_present(dir, filename);
 
 	if (file_exists) {
-		/* load the file into the buffer and draw it in terminal */
-		log_debug_text("handle_command_line_args() file exists");
+		log_debug_text("handle_command_line_args() calling file_read_to_buf()");
+		file_read_to_buf(buf, filename);
+		log_debug_text("handle_command_line_args() calling redraw_screen_full()");
+		redraw_screen_full(buf, state);
 	} else {
-		/* create the file to write to */
 		log_debug_text("handle_command_line_args() provided file doesn't exist, calling file_create()");
 		file_create(filename);
 	}
-
 }
 
-void move_cursor(struct editor_buffer* buf, struct cursor_state* state, const int dx, const int dy)
+void save_and_exit(struct editor_buffer *buf, char *filename)
+{
+	file_write_from_buf(buf, filename);
+	disable_raw_mode();
+}
+
+void move_cursor(struct editor_buffer *buf, struct cursor_state *state, const int dx, const int dy)
 {
 	if (!can_move_cursor(buf, state, dx, dy))
 		return;
@@ -45,12 +51,12 @@ void move_cursor(struct editor_buffer* buf, struct cursor_state* state, const in
 	display_cursor_position(state);
 }
 
-void init_editor_buf(struct editor_buffer* buf)
+void init_editor_buf(struct editor_buffer *buf)
 {
 	size_t initial_size = 10;
-	size_t* line_lengths = calloc(initial_size, sizeof(*line_lengths));
-	size_t* line_max_length = calloc(initial_size, sizeof(*line_max_length));
-	char** lines = malloc(initial_size * sizeof(*lines));
+	size_t *line_lengths = calloc(initial_size, sizeof(*line_lengths));
+	size_t *line_max_length = calloc(initial_size, sizeof(*line_max_length));
+	char **lines = malloc(initial_size * sizeof(*lines));
 	
 	if (!line_lengths ||
 	    !lines) {
@@ -65,7 +71,7 @@ void init_editor_buf(struct editor_buffer* buf)
 	init_buf_lines(buf, initial_size);
 }
 
-void write_to_buffer(struct editor_buffer* buf, struct cursor_state* state, const int c)
+void write_to_buffer(struct editor_buffer *buf, struct cursor_state *state, const int c)
 {
 	log_debug_text("write_to_buffer() calling check_line_capacity()");
 	check_line_capacity(buf, state);
@@ -80,7 +86,7 @@ void write_to_buffer(struct editor_buffer* buf, struct cursor_state* state, cons
 	display_cursor_position(state);
 }
 
-void do_backspace(struct editor_buffer* buf, struct cursor_state* state)
+void do_backspace(struct editor_buffer *buf, struct cursor_state *state)
 {
 	size_t* length = get_line_length_pointer(buf, state->dy);
 
@@ -96,20 +102,16 @@ void do_backspace(struct editor_buffer* buf, struct cursor_state* state)
 		redraw_screen(buf, state);
 		state->dx -= 1;
 	}
-	fprintf(stderr, "line: %s\n", buf->lines[state->dy - 1]);
 	display_cursor_position(state);
 }
 
-void do_enter(struct editor_buffer* buf, struct cursor_state* state)
+void do_enter(struct editor_buffer *buf, struct cursor_state *state)
 {
 	log_debug_text("do_enter() called");
 	buf_put_char(buf, state, '\n');
 
-	state->dy += 1;
-	state->dx = 1;
-
 	buf_check_capacity(buf, state);
-	printf("\033[E");
+	move_cursor(buf, state, 0, 1);
 	display_cursor_position(state);
 }
 
@@ -130,7 +132,7 @@ int read_input()
 			case 'D':
 				return ARROW_LEFT_KEY;
 			default:
-				log_debug_text("unknown fucker in control sequence (func read_input)");
+				log_debug_text("read_input() unknown fucker in control sequence, exiting");
 				return EXIT;
 			}
 		}

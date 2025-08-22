@@ -8,7 +8,8 @@ void get_current_directory(char* cwd);
 void open_current_directory(char* cwd, DIR** directory);
 bool is_file_present(DIR* directory, char* filename);
 void file_create(char* filename);
-void file_write();
+void file_read_to_buf(struct editor_buffer *buf, char *filenam);
+void file_write_from_buf(struct editor_buffer *buf, char *filename);
 
 size_t get_line_length(struct editor_buffer* buf, const int line);
 size_t get_max_line_length(struct editor_buffer* buf, const int line);
@@ -26,7 +27,8 @@ bool needs_adjustment(struct editor_buffer* buf, struct cursor_state* s, const i
 void adjust_pos_to_lastchar(struct editor_buffer* buf, struct cursor_state* s, const int dy);
 void update_cursor_position(struct cursor_state* s, const int dx, const int dy);
 void display_cursor_position(struct cursor_state* s);
-void redraw_screen(struct editor_buffer*, struct cursor_state*);
+void redraw_screen(struct editor_buffer *buf, struct cursor_state *s);
+void redraw_screen_full(struct editor_buffer *buf, struct cursor_state *s);
 
 void print_ptr_values(size_t* pointer, const size_t size);
 void init_ptr_extension(struct editor_buffer* buf, size_t* pointer, size_t value);

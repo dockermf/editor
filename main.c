@@ -17,23 +17,22 @@
  *     -Use different arena allocator to store each line's offset in another arena.
  * */
 
-int main(int argc, char* argv[])
+int main(int argc, char *argv[])
 {
-	if (argc > 1)
-		handle_command_line_args(argc, argv);
-	if (argc > 2)
-		fprintf(stderr, "main() can't feed more than 1 file name, only working with the first\n");
-
 	struct editor_buffer buf;
 	struct cursor_state state = {
 		.dx = 1,
 		.dy = 1
 	};
-	
+
 	init_editor_buf(&buf);
-	
 	enable_raw_mode(&state);
 	
+	if (argc > 1)
+		handle_command_line_args(&buf, &state, argc, argv);
+	if (argc > 2)
+		fprintf(stderr, "main() can't feed more than 1 file name, only working with the first\n");
+
 	while (1) {
 		int inp = read_input();
 		
@@ -63,7 +62,7 @@ int main(int argc, char* argv[])
 			write_to_buffer(&buf, &state, inp);
 		}
 	}
-	disable_raw_mode();
+	save_and_exit(&buf, argv[1]);
 	/* free array here */
 	//fprintf(stderr, "Freed array\n");
 	return 0;

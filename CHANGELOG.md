@@ -53,3 +53,6 @@
 ## 2025-08-21
 ### -Figured how to detect control characters (ie ^C), changed exit key combination to ctrl + Q.
 ### -Fixed unnoticed calloc typo (allocating more than was intended).
+
+## 2025-08-22
+### -Made some progress towards file I/O. Need to fix enter key not refreshing the screen properly; make it handle newlines better when writing to a file (writes shit ton of those currently, if hit enter multiple times, completely fucking up the buffer line).
