@@ -4,5 +4,6 @@
 
 void enable_raw_mode(struct cursor_state*);
 void disable_raw_mode(void);
+int read_input(void);
 
 #endif

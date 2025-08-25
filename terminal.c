@@ -4,11 +4,50 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include "types.h"
+#include "screen.h"
+#include "helpers.h"
 
 #define SIZE 100
 
 struct termios config_in_use;
 struct termios raw;
+
+int read_input()
+{
+	char seq[MAX_SEQ_LENGTH];
+	ssize_t n = read(STDIN_FILENO, &seq, MAX_SEQ_LENGTH);
+	
+	if (seq[0] == '\033' && n >= 3) {
+		if (seq[1] == '[') {
+			switch (seq[2]) {
+			case 'A':
+				return ARROW_UP_KEY;
+			case 'B':
+				return ARROW_DOWN_KEY;
+			case 'C':
+				return ARROW_RIGHT_KEY;
+			case 'D':
+				return ARROW_LEFT_KEY;
+			default:
+				log_debug_text("read_input() unknown fucker in control sequence, exiting");
+				return EXIT;
+			}
+		}
+	}
+
+	/* Note: for control character codes lookup ascii control characters, or just do: [ascii] & 0x1F, which */
+	/* 	 will give you the exact same control ascii code. */
+	switch (seq[0]) {
+	case '\177':
+		return BACKSPACE;
+	case '\015':
+		return ENTER;
+	case '\021':
+		return EXIT;
+	default:
+		return seq[0];
+	}
+}
 
 static void get_terminal_size(struct cursor_state* state)
 { /* or I just could use ioctl instead of fucking with this */

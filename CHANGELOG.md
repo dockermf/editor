@@ -56,3 +56,9 @@
 
 ## 2025-08-22
 ### -Made some progress towards file I/O. Need to fix enter key not refreshing the screen properly; make it handle newlines better when writing to a file (writes shit ton of those currently, if hit enter multiple times, completely fucking up the buffer line).
+
+## 2025-08-25
+### -Big refactor:
+Moved every part of the editor's inner functions (buffer, screen, cursor) from utils.c into their own files.
+[helpers.c](helpers.c) now contains program related helper functions.
+### -Some changes to the inner functions' logic or names.

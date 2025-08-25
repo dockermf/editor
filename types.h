@@ -37,6 +37,7 @@ struct editor_buffer {
 	size_t* line_max_length; /* used to know how many characters lines[i] can hold, not including '\0' */
 	size_t* line_lengths;    /* used to know how long current line is, not including '\0' */
 	size_t lines_total;      /* used to know how many pointers .lines can hold, useful for realloc'ing line related member sizes */
+	size_t lines_max_written;
 };
 
 #endif
