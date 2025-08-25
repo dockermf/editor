@@ -3,7 +3,7 @@
 #include <string.h>
 #include "buffer.h"
 #include "types.h"
-#include "utils.h"
+#include "cursor.h"
 
 void redraw_screen_full(struct editor_buffer *buf, struct cursor_state *state)
 {
@@ -15,7 +15,7 @@ void redraw_screen_full(struct editor_buffer *buf, struct cursor_state *state)
 		write(1, line, strlen(line));
 		write(1, &r_carriage, 1);
 	}
-	move_cursor(state);
+	cursor_move(state);
 }
 
 void redraw_screen(struct editor_buffer *buf, struct cursor_state *state)
@@ -30,5 +30,5 @@ void redraw_screen(struct editor_buffer *buf, struct cursor_state *state)
 		char c = buf->lines[state->dy - 1][i];
 		write(1, &c, 1);
 	}
-	move_cursor(state);
+	cursor_move(state);
 }

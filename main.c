@@ -8,7 +8,6 @@
 #include "cursor.h"
 #include "screen.h"
 #include "helpers.h"
-#include "utils.h" /* to be removed due to refactor */
 #include "types.h"
 
 /* General TODO list:
@@ -52,7 +51,7 @@ int main(int argc, char *argv[])
 				state.dx = get_line_length(&buf, state.dy - 1) + 1;
 
 			cursor_update_coords(&state, 0, -1);
-			move_cursor(&state);
+			cursor_move(&state);
 			break;
 		case ARROW_DOWN_KEY:
 			if (!can_move_cursor(&buf, &state, 0, 1))
@@ -62,27 +61,42 @@ int main(int argc, char *argv[])
 				state.dx = get_line_length(&buf, state.dy + 1) + 1;
 
 			cursor_update_coords(&state, 0, 1);
-			move_cursor(&state);
+			cursor_move(&state);
 			break;
 		case ARROW_RIGHT_KEY:
 			if (!can_move_cursor(&buf, &state, 1, 0))
 				break;
 
 			cursor_update_coords(&state, 1, 0);
-			move_cursor(&state);
+			cursor_move(&state);
 			break;
 		case ARROW_LEFT_KEY:
 			if (!can_move_cursor(&buf, &state, -1, 0))
 				break;
 
 			cursor_update_coords(&state, -1, 0);
-			move_cursor(&state);
+			cursor_move(&state);
 			break;
 		case BACKSPACE:
-			do_backspace(&buf, &state); /* to be refactored */
+			if (!can_move_cursor(&buf, &state, -1, 0)) {
+				size_t length = get_line_length(&buf, state.dy);
+				
+				/* TODO: Currently avoids non-empty lines. Make it move the text on a previous line too. */
+				if (length > 0 || state.dy == 1)
+					break;
+				
+				state.dx = get_line_length(&buf, state.dy - 1) + 1;
+				cursor_update_coords(&state, 0, -1);
+				cursor_move(&state);
+			} else {
+				buf_remove_char(&buf, &state);
+				redraw_screen(&buf, &state);
+				cursor_update_coords(&state, -1, 0);
+			}
+			display_cursor_position(&state);
 			break;
 		case ENTER:
-			do_enter(&buf, &state); /* to be refactored */
+			/* TODO: Implement. */
 			break;
 		default:
 			if (state.dy > buf.lines_max_written)
@@ -91,7 +105,7 @@ int main(int argc, char *argv[])
 			check_line_capacity(&buf, &state);
 			buf_put_char(&buf, &state, inp);
 			redraw_screen(&buf, &state);
-			state.dx++;
+			cursor_update_coords(&state, 1, 0);
 		}
 		display_cursor_position(&state);
 	}

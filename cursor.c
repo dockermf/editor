@@ -2,6 +2,18 @@
 #include "buffer.h"
 #include "types.h"
 
+
+void cursor_move(const struct cursor_state *state)
+{
+	printf("\033[%i;%iH", state->dy, state->dx);
+}
+
+void cursor_update_coords(struct cursor_state *state, const int dx, const int dy)
+{
+	state->dx += dx;
+	state->dy += dy;
+}
+
 bool can_move_cursor(struct editor_buffer *buf, struct cursor_state *state, const int dx, const int dy)
 {
 	/* TODO: simplify rule logic */
@@ -41,28 +53,10 @@ bool next_line_has_less_cols(struct editor_buffer *buf, struct cursor_state *sta
 	return get_line_length(buf, state->dy + dy) < state->dx;
 }
 
-void cursor_update_coords(struct cursor_state *state, const int dx, const int dy)
-{
-	state->dx += dx;
-	state->dy += dy;
-}
-
 void display_cursor_position(const struct cursor_state *state)
 {
 	int offset = 9;
 	printf("\033[%i;%iH", state->screen_max_lines, state->screen_max_columns - offset);
 	printf("%i, %i  ", state->dy, state->dx);
 	printf("\033[%i;%iH", state->dy, state->dx);
-}
-
-void adjust_pos_to_lastchar(struct editor_buffer *buf, struct cursor_state *state, const int dy)
-{
-	int line = state->dy;
-	int next_length = get_line_length(buf, line + dy); 
-	
-	if (next_length == 0)
-		state->dx = 1;
-	else
-		state->dx = next_length;
-	cursor_update_coords(state, 0, dy);
 }
