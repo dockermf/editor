@@ -16,7 +16,6 @@ void cursor_update_coords(struct cursor_state *state, const int dx, const int dy
 
 bool can_move_cursor(struct editor_buffer *buf, struct cursor_state *state, const int dx, const int dy)
 {
-	/* TODO: simplify rule logic */
 	int col = state->dx;
 	int line = state->dy;
 	size_t line_length = get_line_length(buf, line);
@@ -25,27 +24,17 @@ bool can_move_cursor(struct editor_buffer *buf, struct cursor_state *state, cons
 	if (col + dx <= 0 || line + dy <= 0)
 		return false;
 	
-	if (dx != 0) {
-		if (col + dx > line_length) {
-			if (col + dx - line_length == 1)
-				return true;
-			else
-				return false;
-		} else {
-			return true;
-		}
-	} else {
+	if (dy != 0) {
 		if (dy == 1 && line == total_lines)
-		       	return false;
-		else if (get_line_length(buf, line + dy) >= col)
-			return true;
-		else if (dy == -1)
-			return true;
-		else if (dy == 1 && line < total_lines)
-		       	return true;
-		else
 			return false;
 	}
+
+	if (dx != 0) {
+		if (col + dx > line_length && col != line_length)
+			return false;
+	}
+
+	return true;
 }
 
 bool next_line_has_less_cols(struct editor_buffer *buf, struct cursor_state *state, int dy)

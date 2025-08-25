@@ -90,7 +90,7 @@ int main(int argc, char *argv[])
 				cursor_move(&state);
 			} else {
 				buf_remove_char(&buf, &state);
-				redraw_screen(&buf, &state);
+				redraw_line(&buf, &state);
 				cursor_update_coords(&state, -1, 0);
 			}
 			display_cursor_position(&state);
@@ -104,7 +104,7 @@ int main(int argc, char *argv[])
 
 			check_line_capacity(&buf, &state);
 			buf_put_char(&buf, &state, inp);
-			redraw_screen(&buf, &state);
+			redraw_line(&buf, &state);
 			cursor_update_coords(&state, 1, 0);
 		}
 		display_cursor_position(&state);

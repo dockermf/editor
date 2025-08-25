@@ -63,3 +63,4 @@ Moved every part of the editor's inner functions (buffer, screen, cursor) from u
 [helpers.c](helpers.c) now contains program related helper functions.
 ### -Some changes to the inner functions' logic or names.
 ### -Finally removed utils.c; implemented the remaining functions' logic in [main.c](main.c) instead.
+### -Refactored cursor move logic.

@@ -213,6 +213,8 @@ void file_create(char *filename)
 
 void file_read_to_buf(struct editor_buffer *buf, char *filename)
 {
+	/* TODO: fix newlines being read to the buffer too, it messes every */
+	/*	 fucking thing when trying to modify the buffer afterwards. */
 	FILE *file_pointer = fopen(filename, "r");
 	char tmp[4096];
 	int line = 0;
