@@ -33,6 +33,16 @@ char *get_line_pointer(struct editor_buffer *buf, const int line)
 	return buf->lines[line - 1];
 }
 
+char **get_array_byte_pointer(const struct editor_buffer *buf, const int line)
+{
+	return &buf->lines[line - 1];
+}
+
+char *get_line_char_pointer(const struct editor_buffer *buf, const int col, const int line)
+{
+	return &buf->lines[line - 1][col - 1];
+}
+
 void init_ptr_extension(struct editor_buffer *buf, size_t *ptr, size_t value)
 {
 	for (int i = buf->lines_total; i < buf->lines_total * 2; i++)
@@ -137,7 +147,6 @@ void init_buf_lines(struct editor_buffer *buf, size_t size)
 		buf->lines[i] = mem;
 		buf->line_max_length[i] = INIT_LINE_LENGTH;
 	}
-	log_debug_text("init_buf_lines() success");
 }
 
 void init_editor_buf(struct editor_buffer *buf)

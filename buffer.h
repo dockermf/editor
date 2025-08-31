@@ -21,6 +21,8 @@ void check_line_capacity(struct editor_buffer* buf, struct cursor_state* s);
 void extend_line_capacity(struct editor_buffer* buf, struct cursor_state* s);
 
 char* get_line_pointer(struct editor_buffer* buf, const int line);
+char* get_line_char_pointer(const struct editor_buffer *buf, int col, int line);
+char **get_array_byte_pointer(const struct editor_buffer *buf, const int line);
 
 void init_ptr_extension(struct editor_buffer* buf, size_t* pointer, size_t value);
 

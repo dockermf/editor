@@ -64,3 +64,6 @@ Moved every part of the editor's inner functions (buffer, screen, cursor) from u
 ### -Some changes to the inner functions' logic or names.
 ### -Finally removed utils.c; implemented the remaining functions' logic in [main.c](main.c) instead.
 ### -Refactored cursor move logic.
+
+## 2025-08-31
+### -Progress towards implementing the enter key functionality.

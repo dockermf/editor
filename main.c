@@ -3,6 +3,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <dirent.h>
+#include <string.h>
+#include <assert.h>
 #include "terminal.h"
 #include "buffer.h"
 #include "cursor.h"
@@ -22,6 +24,11 @@
 
 int main(int argc, char *argv[])
 {
+	if (argc == 1) {
+		log_debug_text("main() no argument provided, exiting");
+		kill_program();
+	}
+
 	struct editor_buffer buf;
 	struct cursor_state state = {
 		.dx = 1,
@@ -30,11 +37,10 @@ int main(int argc, char *argv[])
 
 	init_editor_buf(&buf);
 	enable_raw_mode(&state);
+	handle_command_line_args(&buf, &state, argc, argv);
 	
-	if (argc > 1)
-		handle_command_line_args(&buf, &state, argc, argv);
 	if (argc > 2)
-		log_debug_text("main() illegal to feed more than 1 file name to the program, only working with the first");
+		log_debug_text("main() can't feed more than 1 argument to the program, only working with the first one");
 
 	while (1) {
 		int inp = read_input();
@@ -96,7 +102,28 @@ int main(int argc, char *argv[])
 			display_cursor_position(&state);
 			break;
 		case ENTER:
-			/* TODO: Implement. */
+			if (buf.lines_total < state.dy + 1)
+				buf_extend_capacity(&buf);
+			
+			memmove(&buf.lines[state.dy], &buf.lines[state.dy - 1], (buf.lines_total - state.dy + 1) * sizeof(buf.lines[0]));
+			
+			char *target = get_line_char_pointer(&buf, state.dx, state.dy);
+			char **dest = get_array_byte_pointer(&buf, state.dy + 1);
+			
+			for (int i = 0; i < buf.lines_total; i++)
+				fprintf(stderr, "byte %9d: %p\n", i, (void *)&buf.lines[i]);
+
+			fprintf(stderr, "next ln = %d, &buf.lines[%d] = %p, func = %p, dest: %p\n",\
+				state.dy + 1, state.dy + 2, (void *)&buf.lines[state.dy + 2],\
+				(void *)get_array_byte_pointer(&buf, state.dy + 1), (void *)dest);
+			fprintf(stderr, "dest%10c: %p\ntarg%10c: %p\nline%10c: %p \n",\
+				' ', (void *)dest, ' ',  (void *)target, ' ',\
+				(void *)get_line_pointer(&buf, state.dy));
+
+			/* TODO: figure this shit out, can't copy the line right now */
+			strncpy(*dest, target, (strlen(target) - state.dx + 1) * sizeof(*target));
+			for (int i = 1; i <= buf.lines_total; i++)
+				fprintf(stderr, "%s\n", get_line_pointer(&buf, i));
 			break;
 		default:
 			if (state.dy > buf.lines_max_written)
