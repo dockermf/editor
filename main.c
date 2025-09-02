@@ -108,20 +108,22 @@ int main(int argc, char *argv[])
 			char **current_byte = get_array_byte_pointer(&buf, state.dy);
 			char **next_byte = get_array_byte_pointer(&buf, state.dy + 1);
 			char *target = get_line_char_pointer(&buf, state.dx, state.dy);
-			
+			size_t full_len = strlen(*current_byte);
+			size_t len = strlen(target);
+
 			/* Note: memmove to make space for the new data at this line */
 			memmove(next_byte, current_byte, (buf.lines_total - state.dy + 1) * sizeof(buf.lines[0]));
-			
-			for (int i = 0; i < buf.lines_total; i++)
-				fprintf(stderr, "byte %9d: %p\n", i, (void *)&buf.lines[i]);
+			*current_byte = malloc(len * sizeof(**current_byte));
+			strncpy(*current_byte, *next_byte, strlen(*next_byte)); /* Restore the moved line to it's original place */
+			strncpy(*next_byte, target, len);
 
-			/* TODO: figure this shit out, can't copy the line right now */
-			size_t len = strlen(target);
-			fprintf(stderr, "Length: %ld\n", len);
-			memmove(*next_byte, target, strlen(target) * sizeof(*target));
-			break;
-			for (int i = 1; i <= buf.lines_total; i++)
-				fprintf(stderr, "%s\n", get_line_pointer(&buf, i));
+			(*current_byte)[full_len - len] = '\0';
+			(*next_byte)[len] = '\0';
+
+			for (int i = state.dy; i < buf.lines_total; i++)
+				buf.line_lengths[i] = buf.line_lengths[i - 1];
+
+			buf.line_lengths[state.dy - 1] -= len;
 			break;
 		default:
 			if (state.dy > buf.lines_max_written)
