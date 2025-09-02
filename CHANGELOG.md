@@ -67,3 +67,4 @@ Moved every part of the editor's inner functions (buffer, screen, cursor) from u
 
 ## 2025-08-31
 ### -Progress towards implementing the enter key functionality.
+### -Fixed newline handling when writing from/reading to the buffer + faulty buffer capacity check when reading to it.

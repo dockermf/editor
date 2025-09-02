@@ -222,21 +222,20 @@ void file_create(char *filename)
 
 void file_read_to_buf(struct editor_buffer *buf, char *filename)
 {
-	/* TODO: fix newlines being read to the buffer too, it messes every */
-	/*	 fucking thing when trying to modify the buffer afterwards. */
 	FILE *file_pointer = fopen(filename, "r");
 	char tmp[4096];
 	int line = 0;
 	buf->lines_max_written = 1;
 
 	while (fgets(tmp, sizeof(tmp), file_pointer)) {
-		strncpy(buf->lines[line], tmp, strlen(tmp));
-		buf->line_lengths[line] = strlen(buf->lines[line]);
+		if (buf->lines_total < line)
+			buf_extend_capacity(buf);
+
+		/* Note: fgets() reads newlines too, so we do -1 to exclude it */
+		strncpy(buf->lines[line], tmp, strlen(tmp) - 1);
+		buf->line_lengths[line] = strlen(buf->lines[line]);	
 		buf->lines_max_written++;
 		line++;
-		
-		if (buf->lines_total <= line)
-			buf_extend_capacity(buf);
 	}
 
 	fclose(file_pointer);
@@ -245,15 +244,14 @@ void file_read_to_buf(struct editor_buffer *buf, char *filename)
 void file_write_from_buf(struct editor_buffer *buf, char *filename)
 {
 	FILE *file_pointer = fopen(filename, "w");
-	
-	for (int i = 0; i < buf->lines_total; i++) {
-		if (strcmp(buf->lines[i], "\n") == 0)
-			continue;
 
-		fprintf(file_pointer, "%s", buf->lines[i]);
+	for (int i = 0; i < buf->lines_total; i++) {
+		if (strcmp(buf->lines[i], "") == 0)
+			continue;
+		
+		fprintf(file_pointer, "%s\n", buf->lines[i]);
 	}
 	fclose(file_pointer);
-
 }
 
 bool is_file_present(DIR *dir, char *filename)

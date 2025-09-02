@@ -105,23 +105,21 @@ int main(int argc, char *argv[])
 			if (buf.lines_total < state.dy + 1)
 				buf_extend_capacity(&buf);
 			
-			memmove(&buf.lines[state.dy], &buf.lines[state.dy - 1], (buf.lines_total - state.dy + 1) * sizeof(buf.lines[0]));
-			
+			char **current_byte = get_array_byte_pointer(&buf, state.dy);
+			char **next_byte = get_array_byte_pointer(&buf, state.dy + 1);
 			char *target = get_line_char_pointer(&buf, state.dx, state.dy);
-			char **dest = get_array_byte_pointer(&buf, state.dy + 1);
+			
+			/* Note: memmove to make space for the new data at this line */
+			memmove(next_byte, current_byte, (buf.lines_total - state.dy + 1) * sizeof(buf.lines[0]));
 			
 			for (int i = 0; i < buf.lines_total; i++)
 				fprintf(stderr, "byte %9d: %p\n", i, (void *)&buf.lines[i]);
 
-			fprintf(stderr, "next ln = %d, &buf.lines[%d] = %p, func = %p, dest: %p\n",\
-				state.dy + 1, state.dy + 2, (void *)&buf.lines[state.dy + 2],\
-				(void *)get_array_byte_pointer(&buf, state.dy + 1), (void *)dest);
-			fprintf(stderr, "dest%10c: %p\ntarg%10c: %p\nline%10c: %p \n",\
-				' ', (void *)dest, ' ',  (void *)target, ' ',\
-				(void *)get_line_pointer(&buf, state.dy));
-
 			/* TODO: figure this shit out, can't copy the line right now */
-			strncpy(*dest, target, (strlen(target) - state.dx + 1) * sizeof(*target));
+			size_t len = strlen(target);
+			fprintf(stderr, "Length: %ld\n", len);
+			memmove(*next_byte, target, strlen(target) * sizeof(*target));
+			break;
 			for (int i = 1; i <= buf.lines_total; i++)
 				fprintf(stderr, "%s\n", get_line_pointer(&buf, i));
 			break;
