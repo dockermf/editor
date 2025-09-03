@@ -16,12 +16,6 @@ void kill_program()
 	exit(EXIT_FAILURE);
 }
 
-void save_and_exit(struct editor_buffer *buf, char *filename)
-{
-	file_write_from_buf(buf, filename);
-	disable_raw_mode();
-}
-
 void handle_command_line_args(struct editor_buffer *buf, struct cursor_state *state, int argc, char *argv[])
 {
 	char *filename = argv[1];
@@ -40,4 +34,6 @@ void handle_command_line_args(struct editor_buffer *buf, struct cursor_state *st
 		log_debug_text("handle_command_line_args() provided file doesn't exist, calling file_create()");
 		file_create(filename);
 	}
+
+	closedir(dir);
 }

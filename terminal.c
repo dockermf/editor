@@ -50,7 +50,8 @@ int read_input()
 }
 
 static void get_terminal_size(struct cursor_state* state)
-{ /* or I just could use ioctl instead of fucking with this */
+{
+	/* or I just could use ioctl instead of fucking with this */
 	char inp[SIZE] = "";
 	int idx = 0;
 	int ch = 0;

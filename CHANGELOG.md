@@ -71,3 +71,7 @@ Moved every part of the editor's inner functions (buffer, screen, cursor) from u
 
 ## 2025-09-02
 ### -Fixed enter key behavior.
+
+## 2025-09-03
+### -Small fix to enter functionality.
+### -The program is free'ing everything on exit now.

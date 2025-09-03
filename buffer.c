@@ -65,7 +65,7 @@ void buf_extend_capacity(struct editor_buffer *buf)
 
 	for (int i = buf->lines_total; i < new_total; i++)
 		new_lines_pointer[i] = malloc(INIT_LINE_LENGTH * sizeof(**new_lines_pointer));
-	
+
 	init_ptr_extension(buf, new_lengths_pointer, 0);
 	init_ptr_extension(buf, new_max_length_pointer, INIT_LINE_LENGTH);
 	
@@ -246,7 +246,7 @@ void file_write_from_buf(struct editor_buffer *buf, char *filename)
 	FILE *file_pointer = fopen(filename, "w");
 
 	for (int i = 0; i < buf->lines_total; i++) {
-		if (strcmp(buf->lines[i], "") == 0)
+		if (strcmp(buf->lines[i], "") == 0 && buf->lines_max_written < i + 1)
 			continue;
 		
 		fprintf(file_pointer, "%s\n", buf->lines[i]);

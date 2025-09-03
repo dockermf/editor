@@ -102,6 +102,7 @@ int main(int argc, char *argv[])
 			display_cursor_position(&state);
 			break;
 		case ENTER:
+			/* TODO: handle the last line of the buffer case so it doesn't get lost after these shenanigans are done */
 			if (buf.lines_total < state.dy + 1)
 				buf_extend_capacity(&buf);
 			
@@ -113,17 +114,19 @@ int main(int argc, char *argv[])
 
 			/* Note: memmove to make space for the new data at this line */
 			memmove(next_byte, current_byte, (buf.lines_total - state.dy + 1) * sizeof(buf.lines[0]));
-			*current_byte = malloc(len * sizeof(**current_byte));
+			*current_byte = malloc(len * sizeof(**current_byte) + 1); /* +1 so it would work with len = 0 */
 			strncpy(*current_byte, *next_byte, strlen(*next_byte)); /* Restore the moved line to it's original place */
 			strncpy(*next_byte, target, len);
-
+			
 			(*current_byte)[full_len - len] = '\0';
 			(*next_byte)[len] = '\0';
-
-			for (int i = state.dy; i < buf.lines_total; i++)
-				buf.line_lengths[i] = buf.line_lengths[i - 1];
+			
+			for (int i = buf.lines_total; i > state.dy; i--)
+				buf.line_lengths[i - 1] = buf.line_lengths[i - 2];
 
 			buf.line_lengths[state.dy - 1] -= len;
+			buf.line_lengths[state.dy] = len;
+			redraw_screen_full(&buf, &state);
 			break;
 		default:
 			if (state.dy > buf.lines_max_written)
@@ -137,8 +140,15 @@ int main(int argc, char *argv[])
 		display_cursor_position(&state);
 	}
 
-	save_and_exit(&buf, argv[1]);
-	/* free array here */
+	file_write_from_buf(&buf, argv[1]);
+	disable_raw_mode();
 	
+	for (int i = 0; i < buf.lines_total; i++)
+		free(buf.lines[i]);
+
+	free(buf.line_lengths);
+	free(buf.lines);
+	free(buf.line_max_length);
+
 	return 0;
 }
